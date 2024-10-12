@@ -1,41 +1,43 @@
-const exp = require('express') 
-const http = require('http')  
-const path = require('path')
-const { Server } = require('socket.io')
-
-
-
-
+const exp = require('express');
+const http = require('http');
+const path = require('path');
+const { Server } = require('socket.io');
 
 const app = exp();
-const server = http.createServer(app); // parse the express app here 
+const server = http.createServer(app);
 
+const io = new Server(server);
 
-const io = new Server(server)
+// Socket.io connection handling
+io.on("connection", (socket) => {
+    console.log("A new user is connected: ", socket.id);
 
+    // Listen for message from client
+    socket.on("message_send_to_server", (message) => {
+        console.log("Received message: ", message);
 
-io.on("connection" , (socket) => {
-          console.log("a new user is created " , socket.id);
-          socket.on("message_send_to_server" , message => {   // here if something comes from frontend just send to all  // like broadcast 
-                    console.log(message);
-                    io.emit("message_from_server" , message)                    
-          } ) 
-})
+        // Broadcast the message to all connected clients
+        io.emit("message_from_server", message);
+    });
 
-app.use(exp.static(path.resolve("")))
+    // Handle user disconnect
+    socket.on("disconnect", () => {
+        console.log("User disconnected: ", socket.id);
+    });
+});
 
-app.get('/' , (req , res)=>{
-          return res.sendFile(path.join(__dirname,'index.html'))
-})
+// Serve the main HTML file directly from the current directory
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 
+// Test route for basic server functionality
+app.get('/check', (req, res) => {
+    res.json({
+        name: "brahma",
+        message: "Hi browser, I am the server."
+    });
+});
 
-app.get('/check' , (req , res) => {
-          res.json({
-                    name : "brahma",
-                    message : " hi browser , i am server "
-          })
-})
-
-
-
-server.listen(5000 , () =>console.log("server running .............")); // here you cant directly use app.listen bcuz we are integrating the websocket 
+// Start the server
+server.listen(5000, () => console.log("Server running on port 5000..."));
