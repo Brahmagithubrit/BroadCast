@@ -1,0 +1,8 @@
+logs
+*.log
+npm-debug.log*
+node_modules/
+.env
+.npm
+rough.txt
+rough2.txt
